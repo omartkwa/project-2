@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Apartment;
+use App\Models\Booking;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -145,5 +146,28 @@ public function approveApartment($id, Request $request)
             'message' => 'Pending apartments fetched successfully',
             'apartments' => $pending
         ], 200);
+    }
+     public function stats(Request $request)
+    {
+        $admin = $request->user();
+
+        if (! $admin || $admin->role !== 'admin') {
+            return response()->json([
+                'status' => 0,
+                'data'=>[],
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+        return response()->json([
+            'status'  => 1,
+            'message' => 'Admin dashboard statistics',
+            'data'    => [ 
+            'users_count'      => User::count(),
+            'tenants_count'    => User::where('role', 'tenant')->count(),
+            'landlords_count'  => User::where('role', 'landlord')->count(),
+            'admin_balance'    => $admin->balance,
+            'bookings_count'   => Booking::where('status', 'approved')->count(),
+ ]
+        ]);
     }
 }

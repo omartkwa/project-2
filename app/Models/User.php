@@ -16,7 +16,6 @@ use HasApiTokens, HasFactory, Notifiable;
     'first_name' ,
     'last_name'  ,
     'birthdate'  ,
-    'role',
     'mobile'    ,
     'password'  ,
     'profile_photo' ,

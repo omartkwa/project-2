@@ -332,6 +332,11 @@ class BookingController extends Controller
                 'updated_at' => now()
             ]);
   $renter->account = $currentBalance - $requiredAmount;
+  $user->account= $user->account+ floor($requiredAmount*90/100);
+  $admin=User::findOrFail(1);
+  $admin->account= $admin->account+ ceil($requiredAmount*10/100);
+        $user->save();
+        $admin->save();
         $renter->save();
         $booking->status = 'approved';
         $booking->save();

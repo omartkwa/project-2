@@ -60,6 +60,5 @@ public function images()
         'rent'  => 'decimal:2',
     ];
 
-    // علاقة many-to-many مع المستخدمين
     
 }

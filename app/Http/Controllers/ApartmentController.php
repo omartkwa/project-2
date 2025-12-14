@@ -32,8 +32,8 @@ class ApartmentController extends Controller
     $page = (int) $request->get('page', 1);
 
     $paginator = Apartment::with('images')
-        ->withAvg('ratings', 'rating')     // ⭐ متوسط التقييم
-        ->withCount('ratings')             // 👤 عدد المقيمين
+        ->withAvg('ratings', 'rating')     
+        ->withCount('ratings')             
         ->where('is_approved', true)
         ->paginate($perPage, ['*'], 'page', $page);
 
@@ -64,8 +64,8 @@ public function show(Request $request, $id)
 
     try {
         $apartment = Apartment::with('images')
-            ->withAvg('ratings', 'rating')   // ⭐ متوسط التقييم
-            ->withCount('ratings')           // 👤 عدد المقيمين
+            ->withAvg('ratings', 'rating')   
+            ->withCount('ratings')           
             ->findOrFail($id);
 
         return response()->json([
@@ -197,8 +197,8 @@ public function search(Request $request)
     }
 
     $query = Apartment::with('images')
-        ->withAvg('ratings', 'rating')   // ⭐ متوسط التقييم
-        ->withCount('ratings')           // 👤 عدد المقيمين
+        ->withAvg('ratings', 'rating')   
+        ->withCount('ratings')           
         ->where('is_approved', true);
 
     if ($request->filled('state'))           $query->where('state', 'like', '%' . $request->state . '%');

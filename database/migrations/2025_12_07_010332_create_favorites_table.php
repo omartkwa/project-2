@@ -14,17 +14,14 @@ return new class extends Migration
         Schema::create('favorites', function (Blueprint $table) {
              $table->id();
 
-            // FK إلى المستخدم
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
 
-            // FK إلى الشقة
             $table->unsignedBigInteger('apartment_id');
             $table->foreign('apartment_id')->references('id')->on('apartments')->onDelete('cascade');
-
+            $table->boolean('favorite');
             $table->timestamps();
 
-            // منع تكرار نفس الشقة لنفس المستخدم
             $table->unique(['user_id', 'apartment_id']);
         });
     }

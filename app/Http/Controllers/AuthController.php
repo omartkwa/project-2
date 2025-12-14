@@ -15,7 +15,7 @@ public function register(Request $request)
     $data = $request->validate([
         'first_name'     => 'required|string|max:100',
         'last_name'      => 'required|string|max:100',
-        'role'           => 'nullable|in:landlord,tenant,admin',
+        // 'role'           => 'nullable|in:landlord,tenant,admin',
         'birthdate'      => 'nullable|date',
         'mobile'         => 'required|string|unique:users,mobile',
         'password'       => 'required|min:8',
@@ -27,16 +27,6 @@ public function register(Request $request)
         'security_code'  => 'required|string',
         'expiry_date'    => 'required|date',
     ]);
-//     if(!($data['first_name']||$data['last_name']||$data['mobile']||$data['password']
-//     ||$data['card_type']||$data['card_number']||$data['security_code']||$data['expiry_date'])
-//     ){
-// return response()->json([
-//             "status"=>0,
-//             'data'=>[],
-//             'message' => 'please complete your information'
-//         ], 403);
-
-//     }
 
     if(User::where('mobile', $data['mobile'])->first()){
         return response()->json([
@@ -120,7 +110,8 @@ if(!$user){
  public function logout(Request $request)
     {
        $user = $request->user();
-        if (! $user) {
+
+     if (! $user) {
         return response()->json([
             "status"=>0,
             'data'=>[],
@@ -166,7 +157,7 @@ public function updateProfile(Request $request)
         'first_name'     => 'nullable|string|max:100',
         'last_name'      => 'nullable|string|max:100',
         'birthdate'      => 'nullable|date',
-        'mobile'         => 'nullable|string|unique:users,mobile,' . $user->id,
+        'mobile'         => 'nullable|string|unique:users,mobile,',
         'password'       => 'nullable|min:8',
         'profile_photo'  => 'nullable|file|image|mimes:jpg,jpeg,png,webp|max:5120',
         'id_photo'       => 'nullable|file|image|mimes:jpg,jpeg,png,webp|max:5120',
