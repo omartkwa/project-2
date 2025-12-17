@@ -89,15 +89,18 @@ if(!$user){
             'message' => 'your accuont is block'
         ], 403);
     }
+        $token = $user->createToken('auth_token')->plainTextToken;
+
     if (!$user->is_approved) {
         return response()->json([
-            'status'=>0,
-            'data'=>[],
+            'status'=>2,
+            'data'=>[
+                'user'=>$user,
+                'token'   => $token],
             'message' => 'Account awaiting admin approval. Please wait.'
-        ], 403);
+        ], 200);
     }
 
-    $token = $user->createToken('auth_token')->plainTextToken;
 
     return response()->json([
     'status'=>1,
@@ -190,5 +193,91 @@ public function updateProfile(Request $request)
 
     ], 200);
 }
+public function upgradeToLandlord( Request $request)
+    {
+        $user=$request->user();
+       
+      if(!$user) {
 
+        return response()->json([
+            "status"=>0,
+            'data'=>[],
+            'message' => 'Not authenticated'], 401);
+    }
+
+        if ($user->role !== 'tenant') {
+            return response()->json([
+                'status'=>0,
+                'data'=>[],                
+                'message' => 'User is not a tenant'
+            ], 400);
+        }
+
+        $user->role = 'landlord';
+        $user->save();
+
+        return response()->json([
+            'message' => 'User role updated to landlord successfully',
+            'status'=>0,
+            'data'=>['user'    => $user],
+        ], 200);
+    }
+
+public function changePassword( Request $request)
+{
+ $user=$request->user();
+       
+      if(!$user) {
+
+        return response()->json([
+            "status"=>0,
+            'data'=>[],
+            'message' => 'Not authenticated'], 401);
+    }
+        $data = $request->validate([
+        'password' => 'required|string',
+        'password-new' => 'required|string',
+        ]);
+    if(!Hash::check($data['password'], $user->password)){
+        return response()->json([
+           'status'=>0,
+            'data'=>[],
+            'message' => 'Invalid credentials'], 401);
+    }
+        $data['password-new'] = Hash::make($data['password-new']);
+        $user->password = $data['password-new'];
+        $user->save();
+return response()->json([
+    'status'=>1,
+    'message' => 'change password successful',
+    "data"=>$user->password 
+    ]);
 }
+public function verified( Request $request)
+{
+     $user=$request->user();
+
+if(!$user){
+        return response()->json([
+            "status"=>0,
+            'data'=>[],
+            'message' => 'User not found'
+        ], 403);
+    }
+
+ if (!$user->is_approved) {
+        return response()->json([
+            'status'=>2,
+            'data'=>[  ],
+            'message' => 'Account awaiting admin approval. Please wait.'
+        ], 200);
+}
+ if ($user->is_approved) {
+        return response()->json([
+            'status'=>1,
+            'data'=>[
+                ],
+            'message' => 'yes'
+        ], 200);
+}
+}}

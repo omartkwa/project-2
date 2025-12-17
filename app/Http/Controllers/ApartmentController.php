@@ -22,10 +22,10 @@ class ApartmentController extends Controller
 
     if (! $user->is_approved) {
         return response()->json([
-            'status'=>0,
+            'status'=>2,
             'data'=>[],
             'message' => 'Account awaiting admin approval. Please wait.'
-        ], 403);
+        ], 200);
     }
 
     $perPage = (int) $request->get('per_page', 10);
@@ -38,10 +38,15 @@ class ApartmentController extends Controller
         ->orderByDesc('ratings_avg_rating')
         ->paginate($perPage, ['*'], 'page', $page);
 
+$items = collect($paginator->items())->map(function ($apartment) {
+    if ($apartment->ratings_avg_rating === null) {
+        $apartment->ratings_avg_rating = 0;
+    }  return $apartment;
+});
     return response()->json([
         "status" => 1,
         'message' => 'approved apartments',
-        'data' => ['apartment'=>$paginator->items()],
+        'data' => ['apartment'=>$items],
     ]);
 }
 public function show(Request $request, $id)
@@ -68,7 +73,10 @@ public function show(Request $request, $id)
             ->withAvg('ratings', 'rating')   
             ->withCount('ratings')           
             ->findOrFail($id);
-
+            
+ if ($apartment->ratings_avg_rating === null) {
+            $apartment->ratings_avg_rating = 0;
+        }
         return response()->json([
             'status' => 1,
             'data'=>['apartment' => $apartment],
@@ -241,11 +249,16 @@ public function search(Request $request)
     $page      = (int) $request->get('page', 1);
     $paginator = $query->paginate($perPage, ['*'], 'page', $page)
                        ->appends($request->query());
-
+$items = collect($paginator->items())->map(function ($apartment) {
+    if ($apartment->ratings_avg_rating === null) {
+        $apartment->ratings_avg_rating = 0;
+    }
+    return $apartment;
+});
     return response()->json([
         'status' => 1,
         'message'=>'your serch',
-        'data'   => ['apartment'=>$paginator->items()]
+        'data'   => ['apartment'=>$items]
     ]);
 }
 

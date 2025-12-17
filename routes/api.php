@@ -39,12 +39,16 @@ Route::middleware('auth:sanctum')->group(function () {
  Route::post('/apartments/{apartmentId}/rate/add', [RatingController::class, 'addRating']);
  Route::post('/apartments/{apartmentId}/rate/update', [RatingController::class, 'updateRating']);
  Route::get('/apartments/{apartmentId}/rate/delete', [RatingController::class, 'deleteRating']);
- Route::post('/logout', [AuthController::class, 'logout']);
+ Route::get('/logout', [AuthController::class, 'logout']);
  Route::get('/profile', [AuthController::class, 'profile']);
  Route::get('/updateProfile', [AuthController::class, 'updateProfile']);
  Route::get('/favorites/add/{apartmentId}', [FavoriteController::class, 'addToFavorite']);
  Route::get('/favorites/remove/{apartmentId}', [FavoriteController::class, 'removeFromFavorite']);
  Route::get('/favorites', [FavoriteController::class, 'myFavorites']);
+ Route::get('/user/upgradeToLandlord',[AuthController::class,'upgradeToLandlord']);
+ Route::post('/user/changePassword',[AuthController::class,'changePassword']);
+ Route::get('/user/verified',[AuthController::class,'verified']);
+
 });
 
 Route::get('/user', function (Request $request) {
