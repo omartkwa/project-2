@@ -29,7 +29,7 @@ class UserSeeder extends Seeder
     'card_type' => 'visa',
     'card_number' => '1234567890123456',
     'expiry_date' => Date('2025-12-31'),
-    'birth_date' => Date('1990-01-01'),
+    'birthdate' => Date('1990-01-01'),
     'security_code' => '123',
     'email_verified_at' => now(),
     'created_at' => now(),
