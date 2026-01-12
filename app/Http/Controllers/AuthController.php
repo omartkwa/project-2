@@ -61,8 +61,8 @@ class AuthController extends Controller
             $admins = User::where('role', 'admin')->get();
 
             if ($admins->count() > 0) {
-                $factory = (new Factory)->withServiceAccount(storage_path('app/firebase_credentials.json'));
-                $messaging = $factory->createMessaging();
+$messaging = app('firebase.messaging');
+
                 $notifTitle = 'تسجيل جديد';
                 $notifBody  = "قام {$newUser->first_name} {$newUser->last_name} بالتسجيل، بانتظار الموافقة.";
 
