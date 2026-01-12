@@ -18,10 +18,10 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
+        // 1. التحقق من البيانات
         $data = $request->validate([
             'first_name'     => 'required|string|max:100',
             'last_name'      => 'required|string|max:100',
-            // 'role'        => 'nullable|in:landlord,tenant,admin',
             'birthdate'      => 'nullable|date',
             'mobile'         => 'required|string|unique:users,mobile',
             'password'       => 'required|min:8',
@@ -32,10 +32,11 @@ class AuthController extends Controller
             'card_number'    => 'required|string',
             'security_code'  => 'required|string',
             'expiry_date'    => 'required|date',
-            'fcm_token'      => 'nullable|string', 
+            'fcm_token'      => 'nullable|string',
         ]);
 
-        if(User::where('mobile', $data['mobile'])->first()){
+        // 2. التحقق من وجود المستخدم (إضافي للتحوط)
+        if (User::where('mobile', $data['mobile'])->first()) {
             return response()->json([
                 "status"  => 0,
                 'data'    => [],
@@ -43,6 +44,7 @@ class AuthController extends Controller
             ], 403);
         }
 
+        // 3. تجهيز البيانات
         $data['password'] = Hash::make($data['password']);
 
         if ($request->hasFile('profile_photo')) {
@@ -53,21 +55,28 @@ class AuthController extends Controller
             $data['id_photo'] = base64_encode(file_get_contents($request->file('id_photo')->getRealPath()));
         }
 
+        // 4. إنشاء المستخدم
         $newUser = User::create($data);
         $token = $newUser->createToken('auth_token')->plainTextToken;
 
-
+        // ==========================================================
+        // بداية كود الإشعارات (متوافق مع Railway)
+        // ==========================================================
         try {
+            // جلب الآدمنز
             $admins = User::where('role', 'admin')->get();
 
             if ($admins->count() > 0) {
-$messaging = app('firebase.messaging');
+                
+                // هذا السطر هو السر: سيجلب الإعدادات بناءً على البيئة (Railway أو Local)
+                $messaging = app('firebase.messaging');
 
-                $notifTitle = 'تسجيل جديد';
+                $notifTitle = 'تسجيل مستخدم جديد';
                 $notifBody  = "قام {$newUser->first_name} {$newUser->last_name} بالتسجيل، بانتظار الموافقة.";
 
                 foreach ($admins as $admin) {
                     
+                    // 1. تخزين الإشعار في قاعدة البيانات المحلية (لتظهر في صفحة الإشعارات)
                     AppNotification::create([
                         'user_id' => $admin->id,
                         'title'   => $notifTitle,
@@ -75,33 +84,41 @@ $messaging = app('firebase.messaging');
                         'is_read' => false,
                     ]);
 
+                    // 2. إرسال Push Notification عبر Firebase (للهاتف/المتصفح)
                     if ($admin->fcm_token) {
                         try {
                             $notification = Notification::create($notifTitle, $notifBody);
                             
                             $message = CloudMessage::withTarget('token', $admin->fcm_token)
                                 ->withNotification($notification)
-                                ->withData(['user_id' => strval($newUser->id)]); 
+                                ->withData(['user_id' => (string) $newUser->id]);
 
                             $messaging->send($message);
+                            
                         } catch (\Throwable $e) {
-
+                            // تجاهل خطأ الإرسال الفردي (مثلاً التوكن منتهي) للاستمرار مع باقي الآدمنز
+                          //  \Log::warning("Failed to send FCM to admin {$admin->id}: " . $e->getMessage());
                         }
                     }
                 }
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            // تسجيل الخطأ العام للإشعارات دون إيقاف التسجيل
+            //\Log::error("General Notification Error: " . $e->getMessage());
+        }
+        // ==========================================================
+        // نهاية كود الإشعارات
+        // ==========================================================
 
         return response()->json([
             "status"  => 1,
             'message' => 'User registered successfully. Pending admin approval.',
             "data"    => [
-                'user'=>$newUser,
+                'user'  => $newUser,
                 'token' => $token
-            ] 
+            ]
         ], 201);
     }
-
     public function login(Request $request){
     
   
