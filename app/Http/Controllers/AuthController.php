@@ -352,8 +352,9 @@ public function storeOrUpdate(Request $request)
             ->get();
 
         return response()->json([
-            'notifications' => $notifications
-        ], 200);
+            'status'=>1,
+            'message' => ' successfully',
+            'data'=>['notifications' => $notifications]], 200);
     }
 
 }
