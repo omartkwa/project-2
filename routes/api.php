@@ -52,7 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
  Route::get('/user/upgradeToLandlord',[AuthController::class,'upgradeToLandlord']);
  Route::post('/user/changePassword',[AuthController::class,'changePassword']);
  Route::get('/user/verified',[AuthController::class,'verified']);
-
+Route::post('/fcm-token',[AuthController::class, 'storeOrUpdate']);
 });
 Route::get('/users', function () {
     return 'omar';

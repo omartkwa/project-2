@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
-use App\Models\AppNotification; // تأكد من إنشاء هذا الموديل كما شرحنا سابقاً
+use App\Models\AppNotification; 
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
@@ -81,7 +81,7 @@ class AuthController extends Controller
                             
                             $message = CloudMessage::withTarget('token', $admin->fcm_token)
                                 ->withNotification($notification)
-                                ->withData(['user_id' => strval($newUser->id)]); // إرسال ID المستخدم الجديد كـ String
+                                ->withData(['user_id' => strval($newUser->id)]); 
 
                             $messaging->send($message);
                         } catch (\Throwable $e) {
@@ -90,9 +90,7 @@ class AuthController extends Controller
                     }
                 }
             }
-        } catch (\Throwable $e) {
-
-        }
+        } catch (\Throwable $e) {}
 
         return response()->json([
             "status"  => 1,
@@ -327,4 +325,24 @@ if(!$user){
             'message' => 'yes'
         ], 200);
 }
-}}
+}
+public function storeOrUpdate(Request $request)
+    {
+        $request->validate([
+            'fcm_token' => 'required|string',
+        ]);
+
+         $user=$request->user();
+
+        $user->fcm_token = $request->fcm_token;
+        $user->save();
+
+        return response()->json([
+            'status'=>1,
+            'message' => 'FCM token saved or updated successfully',
+            'data'=>[]
+        ], 200);
+    }
+}
+
+

@@ -22,7 +22,7 @@ return new class extends Migration
             $table->boolean('is_approved')->default(false);
             $table->boolean('is_active')->default(true);
             $table->string('mobile')->unique();
-             $table->string('fcm_token')->nullable();
+            $table->string('fcm_token')->nullable();
             $table->text('address')->nullable();
             $table->enum('card_type',['visa','master','amex','discover'])->nullable();
             $table->text('card_number')->nullable();

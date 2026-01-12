@@ -24,7 +24,8 @@ use HasApiTokens, HasFactory, Notifiable;
     'card_type'    ,
     'card_number'  ,
     'security_code' ,
-   'expiry_date'  
+   'expiry_date'  ,
+   'fcm_token'
            
     ];
    public function apartments()
