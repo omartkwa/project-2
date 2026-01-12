@@ -53,6 +53,10 @@ Route::middleware('auth:sanctum')->group(function () {
  Route::post('/user/changePassword',[AuthController::class,'changePassword']);
  Route::get('/user/verified',[AuthController::class,'verified']);
 Route::post('/fcm-token',[AuthController::class, 'storeOrUpdate']);
+Route::get(
+    '/notifications',
+    [AuthController::class, 'indexNot']
+);
 });
 Route::get('/users', function () {
     return 'omar';
