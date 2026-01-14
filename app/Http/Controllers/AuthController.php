@@ -7,7 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
-use App\Models\AppNotification; 
+use App\Models\AppNotification;
+use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
@@ -18,7 +19,6 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        // 1. التحقق من البيانات
         $data = $request->validate([
             'first_name'     => 'required|string|max:100',
             'last_name'      => 'required|string|max:100',
@@ -35,7 +35,6 @@ class AuthController extends Controller
             'fcm_token'      => 'nullable|string',
         ]);
 
-        // 2. التحقق من وجود المستخدم (إضافي للتحوط)
         if (User::where('mobile', $data['mobile'])->first()) {
             return response()->json([
                 "status"  => 0,
@@ -44,7 +43,6 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // 3. تجهيز البيانات
         $data['password'] = Hash::make($data['password']);
 
         if ($request->hasFile('profile_photo')) {
@@ -55,60 +53,45 @@ class AuthController extends Controller
             $data['id_photo'] = base64_encode(file_get_contents($request->file('id_photo')->getRealPath()));
         }
 
-        // 4. إنشاء المستخدم
         $newUser = User::create($data);
         $token = $newUser->createToken('auth_token')->plainTextToken;
 
-        // ==========================================================
-        // بداية كود الإشعارات (متوافق مع Railway)
-        // ==========================================================
-        try {
-            // جلب الآدمنز
-            $admins = User::where('role', 'admin')->get();
 
-            if ($admins->count() > 0) {
-                
-                // هذا السطر هو السر: سيجلب الإعدادات بناءً على البيئة (Railway أو Local)
+  try {
+            $admin = User::where('role', 'admin')->first();
+
+            if ($admin && $admin->fcm_token) {
+
                 $messaging = app('firebase.messaging');
 
-                $notifTitle = 'تسجيل مستخدم جديد';
-                $notifBody  = "قام {$newUser->first_name} {$newUser->last_name} بالتسجيل، بانتظار الموافقة.";
+                $notifTitle = 'تسجيل جديد';
+                $notifBody  = "قام {$newUser->first_name} {$newUser->last_name} بالتسجيل.";
 
-                foreach ($admins as $admin) {
-                    
-                    // 1. تخزين الإشعار في قاعدة البيانات المحلية (لتظهر في صفحة الإشعارات)
-                    AppNotification::create([
-                        'user_id' => $admin->id,
-                        'title'   => $notifTitle,
-                        'body'    => $notifBody,
-                        'is_read' => false,
-                    ]);
+                AppNotification::create([
+                    'user_id' => $admin->id,
+                    'title'   => $notifTitle,
+                    'body'    => $notifBody,
+                    'is_read' => false,
+                ]);
 
-                    // 2. إرسال Push Notification عبر Firebase (للهاتف/المتصفح)
-                    if ($admin->fcm_token) {
-                        try {
-                            $notification = Notification::create($notifTitle, $notifBody);
-                            
-                            $message = CloudMessage::withTarget('token', $admin->fcm_token)
-                                ->withNotification($notification)
-                                ->withData(['user_id' => (string) $newUser->id]);
+                $notification = Notification::create($notifTitle, $notifBody);
+                $message = CloudMessage::withTarget('token', $admin->fcm_token)
+                    ->withNotification($notification)
+                    ->withData(['user_id' => (string) $newUser->id]);
 
-                            $messaging->send($message);
-                            
-                        } catch (\Throwable $e) {
-                            // تجاهل خطأ الإرسال الفردي (مثلاً التوكن منتهي) للاستمرار مع باقي الآدمنز
-                          //  \Log::warning("Failed to send FCM to admin {$admin->id}: " . $e->getMessage());
-                        }
-                    }
-                }
+                $messaging->send($message);
+            
             }
+
         } catch (\Throwable $e) {
-            // تسجيل الخطأ العام للإشعارات دون إيقاف التسجيل
-            //\Log::error("General Notification Error: " . $e->getMessage());
+
+            return response()->json([
+                "status"  => 0,
+                "message" => "فشل إرسال الفايربيس",
+                "error"   => $e->getMessage(), 
+                "line"    => $e->getLine()
+            ], 500);
         }
-        // ==========================================================
-        // نهاية كود الإشعارات
-        // ==========================================================
 
         return response()->json([
             "status"  => 1,

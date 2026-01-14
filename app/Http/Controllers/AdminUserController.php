@@ -125,7 +125,7 @@ class AdminUserController extends Controller
 
         return response()->json([
             'message' => 'User role updated to landlord successfully',
-            'status'=>0,
+            'status'=>1,
             'data'=>['user'    => $user],
         ], 200);
     }
